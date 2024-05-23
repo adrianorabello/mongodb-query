@@ -330,7 +330,7 @@ db.pokemon.updateOne(
   {
     $push: {
       types: {
-        $each: ["Campo que deve ficar primiero"],
+        $each: ["Teste 01"],
         $position: 0
       }
     }
@@ -380,6 +380,22 @@ db.pokemon.updateOne(
   }
 )
 
+/**
+ * @TODO Outras formas de atualizar objeto
+ * 
+ */
+// para atualizar o documento e devolver o documento sem a modificação realizada 
+db.pokemon.findOneAndUpdate({ _id: 20 }, { $set: { using_find_one_update: true } })
+
+// para atualizar o documento e devolver o documento com a modificação realizada 
+db.pokemon.findOneAndUpdate({ _id: 20 }, { $set: { using_find_one_update: true } }, { returnNewDocument: true })
+
+// outra forma de atualizar os dados e retornar os objeto atualizado
+db.pokemon.findAndModify({ query: { _id: 20 }, update: { $set: { using_find_and_modify: false } }, new: true })
+
+
+// O findAndMOdify também pode ser utilizado para remover documentos 
+db.pokemon.findAndModify({ query: { _id: 2 }, remove: true })
 
 
 /**
@@ -420,6 +436,58 @@ db.pokemon.updateOne(
  * O valor 1 remove o último, o valor -1 remove o primeiro 
  */
 
-db.pokemon.updateOne({_id: 20}, {$pop: {types: 1}});
+db.pokemon.updateOne({ _id: 20 }, { $pop: { types: 1 } });
 
 
+
+
+/**
+ *  @TODO  Removendo elementos do array
+ *  Remove o que você definir atraves de uma query
+ */
+
+db.pokemon.updateOne({ _id: 20 }, { $pull: { types: "Error" } });
+
+db.pokemon.updateOne({ _id: 20 }, { $pull: { types: { $in: ["Fly", "Poison"] } } });
+
+// remover todos do arrays que estão em types
+
+db.pokemon.updateOne({ _id: 20 }, { $pullAll: { types: ["Fly", "Poison"] } });
+
+
+
+/**
+ * @TODO Alterando objeto dentro do array
+ * 
+ * 
+ */
+
+db.pokemon.updateOne(
+  { _id: 20 },
+  {
+    $set: {
+      types: [
+
+        { name: "Fire", bonus_point: 45, wakness: "Water" },
+        { name: "Fly", bonus_point: 50, wakness: "Rock" },
+        { name: "Bug", bonus_point: 14, wakness: "Chinelo" }
+      ]
+    }
+  })
+
+// altera um campo especifico do array encontrasto no filtro 
+db.pokemon.updateOne({ _id: 20, "types.name": "Fire" }, { $set: { "types.$.bonus_point": 42 } })
+
+db.pokemon.updateOne({ _id: 20, "types.name": "Fire" }, { $set: { "types.$.strong_against": ["Ice", "Bug", "Paison"] } })
+
+db.pokemon.updateOne({ _id: 20, "types.name": "Fire" }, { $set: { "types.$.strong_against": ["Ice", "Paison"] } })
+
+
+
+/**
+* @TODO Ordenando objetos dentro do array 
+* 
+* 
+*/
+
+db.pokemon.updateOne({ _id: 20 }, { $push: { types: { $each: [], $sort: { "bonuns_point": 1 } } } })
