@@ -514,6 +514,25 @@ db.pokemon.find({attack: {$gte: 85}}).explain('executionStats')
 /**
  * @TODO Criando index 
  * 
+ * Quando criamos um index o mongodb cria uma tabela auxiliar para obter os dados pela orndenação
+ * criada no index mais rapidamente
+ * 
  */
 
 db.pokemon.createIndex({name: 1})
+
+db.pokemon.createIndex( {name:1 , attack: -1})
+
+db.pokemon.createIndex( {attack: -1 , name:  1})
+
+// informando o MongoDB para utilizar o index criado 
+
+db.pokemon.find({attack: {$gte: 85}}).hint({attack: 1, name: 1}).explain('executionStats')
+
+// dropando indexes. Informar o nome do index
+
+db.pokemon.dropIndex("name_1_attack_-1")
+
+// obtendo dados de arrays que possuem determinados valores, mesmo que estejam invertidos
+
+db.domino.find({piece: {$all : [2,3] }} )
