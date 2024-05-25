@@ -491,3 +491,29 @@ db.pokemon.updateOne({ _id: 20, "types.name": "Fire" }, { $set: { "types.$.stron
 */
 
 db.pokemon.updateOne({ _id: 20 }, { $push: { types: { $each: [], $sort: { "bonuns_point": 1 } } } })
+
+
+
+
+
+
+/** 
+ * @TODO explain  
+ * 
+ * 
+ * 
+ * */
+
+// devolve os dados sobre a execução da query
+db.pokemon.find({attack: {$gte: 85}}).explain()
+
+db.pokemon.find({attack: {$gte: 85}}).explain('executionStats')
+
+
+
+/**
+ * @TODO Criando index 
+ * 
+ */
+
+db.pokemon.createIndex({name: 1})
