@@ -426,8 +426,7 @@ db.pokemon.updateOne(
         $slice: 2
       }
     }
-    )
-  }
+  })
 
 
 
@@ -505,9 +504,9 @@ db.pokemon.updateOne({ _id: 20 }, { $push: { types: { $each: [], $sort: { "bonun
  * */
 
 // devolve os dados sobre a execução da query
-db.pokemon.find({attack: {$gte: 85}}).explain()
+db.pokemon.find({ attack: { $gte: 85 } }).explain()
 
-db.pokemon.find({attack: {$gte: 85}}).explain('executionStats')
+db.pokemon.find({ attack: { $gte: 85 } }).explain('executionStats')
 
 
 
@@ -519,15 +518,15 @@ db.pokemon.find({attack: {$gte: 85}}).explain('executionStats')
  * 
  */
 
-db.pokemon.createIndex({name: 1})
+db.pokemon.createIndex({ name: 1 })
 
-db.pokemon.createIndex( {name:1 , attack: -1})
+db.pokemon.createIndex({ name: 1, attack: -1 })
 
-db.pokemon.createIndex( {attack: -1 , name:  1})
+db.pokemon.createIndex({ attack: -1, name: 1 })
 
 // informando o MongoDB para utilizar o index criado 
 
-db.pokemon.find({attack: {$gte: 85}}).hint({attack: 1, name: 1}).explain('executionStats')
+db.pokemon.find({ attack: { $gte: 85 } }).hint({ attack: 1, name: 1 }).explain('executionStats')
 
 // dropando indexes. Informar o nome do index
 
@@ -535,4 +534,286 @@ db.pokemon.dropIndex("name_1_attack_-1")
 
 // obtendo dados de arrays que possuem determinados valores, mesmo que estejam invertidos
 
-db.domino.find({piece: {$all : [2,3] }} )
+db.domino.find({ piece: { $all: [2, 3] } })
+
+// retorna algumas informações sobre o banco de dados selecionado
+db.stats()
+
+
+
+
+/**
+ * @TODO Entendo a pesquisa de queires indexadas
+ * 
+ * @COVEREDQIERY -> é quando o mongo db consegue obter os dados do documento 
+ * sem precisar acesssar o documento, pois os dados pesquisados estão no index criado
+ */
+
+
+
+/**
+ * @AGRAGATE
+ * 
+ */
+
+db.combats.aggregate([
+  {
+    $lookup: {
+      from: "pokemon",
+      localField: "First_pokemon",
+      foreignField: "_id",
+      as: "pokemon1_arr"
+    },
+  }, {
+    $lookup: {
+      from: "pokemon",
+      localField: "Second_pokemon",
+      foreignField: "_id",
+      as: "pokemon2_arr"
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      Winnner: 1,
+      pokemon1: {
+        $arrayElementAt: ["$pokemon1_arr", 0]
+      },
+      pokemon2: {
+        $arrayElementAt: ["$pokemon2_arr", 0]
+      }
+    }
+  },
+  {
+    $project: {
+      winner: {
+        $cond: {
+          if: { $eq: ["$Winner", "$pokemon1._id"] },
+          then: "$pokemon1.name",
+          else: "$pokemon2.name"
+        }
+      }
+    }
+  }
+])
+
+
+/**
+ * @MODELO_ENTIDADE_RELACIONAMENTO
+ * 
+ */
+
+/**
+ * @MODELAGEM_1_X_1
+ */
+/**
+ * Modelagem Estudante
+ * Recomandado usar embebedesd document no mongodb
+ */
+
+{
+  cpf: "12345678";
+  nome: "João";
+  cidade: "São Paulo";
+  carteirinha: {
+    turma: "22A";
+    ra: 1245
+  }
+}
+
+/**
+ * @MODELAGEM_1_X_MUITOS
+ * 
+ */
+
+/** @SETOR */
+{
+  _id: 1
+  meta: 4000;
+  nome: "Administrativo"
+};
+
+/** @FUNCIONARIO */
+
+{
+  _id: 1;
+  salario: 9000;
+  h_entrada: 8;
+  cargo: "desenvolvedor";
+  setor_d: 1
+}
+
+
+/**
+ *  @RELACIONAMENTO_MUITOS_PARA_MUITOS 
+ * 
+ * 
+ * 
+*/
+
+/** @FORNECEDOR  */
+{
+  _id: "f04";
+  cnpj: "165486984";
+  nome: "Fornecedor Legal";
+  cep: "1098465";
+  produto_ids: ["p16", "p21"]
+
+}
+
+
+{
+  _id: "f07";
+  cnpj: "98498151";
+  nome: "Fornecedor Maneiro";
+  cep: "198498";
+  produto_ids: ["p21", "p47"]
+}
+
+
+/** @PRODUTO */
+{
+  _id: "p16";
+  descricao: "Panela";
+  preco: 45.50;
+  fornecedor_ids: ["f04"]
+}
+
+{
+  _id: "p21";
+  descricao: "Prato";
+  preco: 14;
+  fornecedor_ids: ["f04", "f07"]
+}
+
+{
+  _id: "p47";
+  descricao: "Faqueiro";
+  preco: 127.46;
+  fornecedor_ids: ["f07"]
+}
+
+
+/**
+ * @MUITOS_PARA_MUITOS_ATRIBUTO_NO_RELACIONAMENTO_HIBRIDO
+ * 
+ * 
+ * 
+ */
+
+{
+  _id: "f04";
+  cnpj: "165486984";
+  nome: "Fornecedor Legal";
+  cep: "1098465";
+  produtos: [
+    {
+      _id: "p16",
+      preco: 46.5
+    },
+    {
+      _id: "p21",
+      preco: 12
+    }
+  ]
+}
+
+{
+  _id: "f07";
+  cnpj: "98498151";
+  nome: "Fornecedor Maneiro";
+  cep: "198498";
+  produtos: [
+    {
+      _id: p21,
+      preco: 16
+    },
+    {
+      _id: "p47",
+      preco: 127.46
+    }
+  ]
+}
+
+
+// Collection Produtos
+{
+  _id: p16;
+  descricao: "Panela";
+  fornecedores: [
+    {
+      _id: "f04",
+      preco: 46.50
+    }
+  ]
+}
+
+{
+  _id: "p21";
+  descricao: "Prato";
+  fornecedores: [
+    {
+      _id: "f04",
+      preco: 12
+    },
+    {
+      _id: "f07",
+      preco: 16
+    }
+  ]
+}
+
+{
+  _id: "p47";
+  descricao: "Faqueiro";
+  fornecedores: [
+    {
+      _id: "f07",
+      preco: 127.46
+    }
+  ]
+}
+
+
+
+
+/**
+ * @AGGREGATION_NETFLIX
+ * 
+ */
+
+db.netflix.aggregate([
+  {
+    $match: {
+      date_added: {
+        $lte: ISODate("2010-01-01"),
+        $gte: ISODate("2009-01-01")
+      }
+    }
+  }
+])
+
+
+/**
+ * @TREINANDO_AGRGREGATE
+ */
+
+db.orders.insertMany( [
+  { _id: 1, cust_id: "abc1", ord_date: ISODate("2012-11-02T17:04:11.102Z"), status: "A", amount: 50 },
+  { _id: 2, cust_id: "xyz1", ord_date: ISODate("2013-10-01T17:04:11.102Z"), status: "A", amount: 100 },
+  { _id: 3, cust_id: "xyz1", ord_date: ISODate("2013-10-12T17:04:11.102Z"), status: "D", amount: 25 },
+  { _id: 4, cust_id: "xyz1", ord_date: ISODate("2013-10-11T17:04:11.102Z"), status: "D", amount: 125 },
+  { _id: 5, cust_id: "abc1", ord_date: ISODate("2013-11-12T17:04:11.102Z"), status: "A", amount: 25 }
+] )
+
+
+db.orders.aggregate( [
+  { $match: { status: "A" } },
+  { $group: { _id: "$cust_id", total: { $sum: "$amount" } } },
+  { $sort: { total: -1 } }
+] )
+
+db.orders.aggregate( [
+  { $group: { _id: "$status", total: { $sum: "$amount" } } },
+  { $sort: { total: 1 } }
+] )
